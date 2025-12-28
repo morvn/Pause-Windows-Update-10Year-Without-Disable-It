@@ -1,16 +1,15 @@
 <#
 .SYNOPSIS
-    Extends the Windows Update pause period to 10 years.
-
-.DESCRIPTION
-    This script modifies the Windows Registry to set the Windows Update pause duration 
-    to 10 years from the current date. it handles cases where the update has not 
-    been paused before by creating the necessary registry values.
-
-.NOTES
-    Author: YourName/GitHubUsername
-    Requires: Administrative Privileges
+    Extends Windows Update pause to 10 years with automatic Admin elevation.
 #>
+
+# --- AUTO ELEVATION CODE ---
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "Requesting Administrative privileges..." -ForegroundColor Yellow
+    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+# --- END OF AUTO ELEVATION ---
 
 $registryPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
 $currentDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -27,22 +26,19 @@ $pauseSettings = @{
 
 Write-Host "--- Windows Update Pause Extender ---" -ForegroundColor Cyan
 
-# Ensure the registry path exists
 if (!(Test-Path $registryPath)) {
-    Write-Host "[*] Creating registry path..." -ForegroundColor Yellow
     New-Item -Path $registryPath -Force | Out-Null
 }
 
-# Apply the settings
 foreach ($setting in $pauseSettings.GetEnumerator()) {
     try {
-        # New-ItemProperty with -Force acts as an "Upsert" (Update or Insert)
         New-ItemProperty -Path $registryPath -Name $setting.Key -Value $setting.Value -PropertyType String -Force -ErrorAction Stop
-        Write-Host "[SUCCESS] $($setting.Key) set to 10 years from now." -ForegroundColor Green
+        Write-Host "[SUCCESS] $($setting.Key) updated." -ForegroundColor Green
     } catch {
-        Write-Host "[ERROR] Failed to set $($setting.Key). Please run as Administrator." -ForegroundColor Red
+        Write-Host "[ERROR] Failed to set $($setting.Key)." -ForegroundColor Red
     }
 }
 
-Write-Host "`nTask completed. Windows Update is now paused until $expiryDate." -ForegroundColor Cyan
-Write-Host "Please restart the Settings app to see the changes." -ForegroundColor Gray
+Write-Host "`nTask completed! Updates paused until $expiryDate." -ForegroundColor Cyan
+Write-Host "Press any key to close..." -ForegroundColor Gray
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
