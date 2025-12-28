@@ -1,4 +1,4 @@
-# Windows Update Pause Extender (10-Year Duration)
+# Windows Update Pause Without Disable It (10-Year Duration)
 
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue.svg)](https://www.microsoft.com/windows)
 [![Language: PowerShell](https://img.shields.io/badge/Language-PowerShell-blue.svg)](https://github.com/PowerShell/PowerShell)
@@ -99,4 +99,5 @@ This script is provided as-is for administrative and educational purposes. Modif
 ## License
 
 This project is licensed under the MIT License.
+
 
