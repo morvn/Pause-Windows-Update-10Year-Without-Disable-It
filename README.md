@@ -32,15 +32,19 @@ The following registry values of type `REG_SZ` are written using ISO 8601 UTC ti
 
 These keys are the same values used internally by the Windows Update user interface.
 
-## Installation and Usage
+##  How to Use
 
-### Manual Execution (Recommended)
-1. Download the `PauseWindowsUpdate10YearWithoutDisableIt.ps1` script from this repository.
-2. Right-click the file and select **Run with PowerShell**.
-3. Confirm the UAC prompt to allow administrative changes.
+Windows often blocks `.ps1` files by default. To run this script easily:
+
+1. Download both `PauseWindowsUpdate10YearWithoutDisableIt.ps1` and `RunMe.bat`.
+2. Place them in the same folder.
+3. **Right-click `RunMe.bat` and select "Run as Administrator"** (or just double-click it).
+4. A UAC prompt will appear; click **Yes**.
+5. The script will execute and keep the window open until you press a key.
 
 ## Disclaimer
 
 Use this tool at your own risk. Disabling Windows security updates for extended periods can expose systems to known vulnerabilities. This utility is intended for advanced users operating in controlled environments.
 
 ## To restore normal update behavior at any time, open **Settings → Windows Update** and select **Resume updates**.
+
