@@ -1,27 +1,79 @@
 # Windows Update Pause Extender (10-Year Duration)
 
-A lightweight PowerShell utility to bypass the default Windows Update pause limitation and extend the pause duration to 10 years from the execution date. The script works by modifying official Windows Update UX registry keys used internally by Windows 10 and Windows 11.
+[![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue.svg)](https://www.microsoft.com/windows)
+[![Language: PowerShell](https://img.shields.io/badge/Language-PowerShell-blue.svg)](https://github.com/PowerShell/PowerShell)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+A PowerShell utility to bypass the default 35-day Windows Update pause limitation and extend the pause duration to **10 years**. This README is designed for direct copy-paste execution without downloading files and without triggering Windows execution policy restrictions.
 
 ## Overview
 
-Windows 10 and Windows 11 restrict update pauses to a short period of approximately five weeks. This script directly updates Windows Update User Experience settings stored in the system registry to enforce a long-term deferral period without relying on third-party services or background processes.
+Windows 10 and Windows 11 only allow pausing updates for a short period of approximately five weeks. This method directly modifies Windows Update User Experience registry values so the system recognizes a long-term pause window immediately, preventing forced updates and restarts.
 
-This tool is intended for systems where update stability is prioritized, including mission-critical environments, bandwidth-limited or metered connections, and development machines where unexpected updates or reboots can interrupt long-running tasks.
+This approach is intended for advanced users managing development machines, test systems, or controlled production environments where update timing must be explicitly controlled.
 
-## Key Features
+## How to Apply (Copy-Paste Method)
 
-- Automatically applies a 10-year pause duration calculated from the execution timestamp.
-- Verifies the required registry path and creates it if it does not exist.
-- Applies pause settings consistently for Feature Updates, Quality Updates, and the global Windows Update timer.
-- Idempotent execution, allowing repeated runs without side effects while refreshing the pause window.
+No file download is required.
+
+1. Press `Win + X` and open **Terminal (Admin)** or **Windows PowerShell (Admin)**.
+2. Copy the entire script below.
+3. Paste it into the elevated PowerShell window and press **Enter**.
+
+    # --- ⬇️Windows Update 10-Year Pause Script⬇️ ---
+
+<details>
+<summary><strong>Copy–Paste This PowerShell Script (Run as Administrator)</strong></summary>
+
+```powershell
+# =====================================================
+# Windows Update Pause Extender — 10 Years
+# Copy & Paste directly into PowerShell (Run as Admin)
+# =====================================================
+
+$registryPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
+
+$now    = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+$expiry = (Get-Date).AddYears(10).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+
+$values = @{
+    "PauseFeatureUpdatesStartTime" = $now
+    "PauseFeatureUpdatesEndTime"   = $expiry
+    "PauseQualityUpdatesStartTime" = $now
+    "PauseQualityUpdatesEndTime"   = $expiry
+    "PauseUpdatesStartTime"        = $now
+    "PauseUpdatesExpiryTime"       = $expiry
+}
+
+if (!(Test-Path $registryPath)) {
+    New-Item -Path $registryPath -Force | Out-Null
+}
+
+foreach ($item in $values.GetEnumerator()) {
+    New-ItemProperty `
+        -Path $registryPath `
+        -Name $item.Key `
+        -Value $item.Value `
+        -PropertyType String `
+        -Force | Out-Null
+}
+
+Restart-Service UsoSvc   -Force -ErrorAction SilentlyContinue
+Restart-Service wuauserv -Force -ErrorAction SilentlyContinue
+
+Write-Host "Windows Update paused until $expiry"
+
+```
+
+</details>
 
 ## Technical Details
 
-The script modifies the following Windows Registry path:
+The script modifies the following registry path:
 
     HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings
 
-The following registry values of type `REG_SZ` are written using ISO 8601 UTC timestamps:
+The following `REG_SZ` values are written using ISO 8601 UTC timestamps:
 
 - `PauseFeatureUpdatesStartTime`
 - `PauseFeatureUpdatesEndTime`
@@ -30,21 +82,21 @@ The following registry values of type `REG_SZ` are written using ISO 8601 UTC ti
 - `PauseUpdatesStartTime`
 - `PauseUpdatesExpiryTime`
 
-These keys are the same values used internally by the Windows Update user interface.
+These values are the same keys used internally by the Windows Update user interface.
 
-##  How to Use
+## Verification
 
-Windows often blocks `.ps1` files by default. To run this script easily:
+After execution:
 
-1. Download both `PauseWindowsUpdate10YearWithoutDisableIt.ps1` and `RunMe.bat`.
-2. Place them in the same folder.
-3. **Right-click `RunMe.bat` and select "Run as Administrator"** (or just double-click it).
-4. A UAC prompt will appear; click **Yes**.
-5. The script will execute and keep the window open until you press a key.
+1. Open **Settings > Windows Update**.
+2. The status should display updates paused until a date approximately 10 years in the future.
+3. If the date does not update visually, click **Pause for 1 week** once to force the UI to re-read the registry values.
 
 ## Disclaimer
 
-Use this tool at your own risk. Disabling Windows security updates for extended periods can expose systems to known vulnerabilities. This utility is intended for advanced users operating in controlled environments.
+This script is provided as-is for administrative and educational purposes. Modifying registry values and disabling Windows security updates for extended periods may expose the system to known vulnerabilities. Use only in environments where update management is handled manually and with full awareness of the risks.
 
-## To restore normal update behavior at any time, open **Settings → Windows Update** and select **Resume updates**.
+## License
+
+This project is licensed under the MIT License.
 
