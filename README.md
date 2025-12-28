@@ -1,60 +1,46 @@
-# 🛑 Windows Update Pause Extender (10-Year Duration)
+# Windows Update Pause Extender (10-Year Duration)
 
-> A **lightweight**, **automated** PowerShell utility to bypass Windows’ 35-day update pause limit — extend pause up to **10 years** with a single command.
+A lightweight PowerShell utility to bypass the default Windows Update pause limitation and extend the pause duration to 10 years from the execution date. The script works by modifying official Windows Update UX registry keys used internally by Windows 10 and Windows 11.
 
----
+## Overview
 
-## 📖 Overview
+Windows 10 and Windows 11 restrict update pauses to a short period of approximately five weeks. This script directly updates Windows Update User Experience settings stored in the system registry to enforce a long-term deferral period without relying on third-party services or background processes.
 
-Windows 10/11 limits update pausing to **5 weeks (35 days)** via Settings UI.  
-This script **directly edits** the Windows Update UX registry keys to extend deferral *far beyond* that — ideal for:
+This tool is intended for systems where update stability is prioritized, including mission-critical environments, bandwidth-limited or metered connections, and development machines where unexpected updates or reboots can interrupt long-running tasks.
 
-- 🔒 Mission-critical or air-gapped systems  
-- 📉 Metered/limited-bandwidth environments  
-- 💻 Dev/test setups sensitive to unexpected reboots  
-- 🧪 Controlled lab/education environments
+## Key Features
 
----
+- Automatically applies a 10-year pause duration calculated from the execution timestamp.
+- Verifies the required registry path and creates it if it does not exist.
+- Applies pause settings consistently for Feature Updates, Quality Updates, and the global Windows Update timer.
+- Idempotent execution, allowing repeated runs without side effects while refreshing the pause window.
 
-## ✨ Key Features
+## Technical Details
 
-| Feature | Description |
-|--------|-------------|
-| ⏳ **10-Year Timer** | Sets expiry **exactly 10 years** from execution (`Now + 3652 days`) |
-| 🧪 **Safe & Idempotent** | No side effects — rerun anytime to *refresh* timer |
-| 🧱 **Auto-Create Keys** | Creates missing registry path/values if needed |
-| 🎯 **Full Coverage** | Pauses *Feature*, *Quality*, and *All Updates* uniformly |
-| 🪪 **ISO 8601 UTC** | All timestamps use standard `YYYY-MM-DDTHH:MM:SSZ` format |
+The script modifies the following Windows Registry path:
 
----
+    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings
 
-## 🛠️ Technical Specs
+The following registry values of type `REG_SZ` are written using ISO 8601 UTC timestamps:
 
-- **Registry Hive**: `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings`  
-- **Values Modified** (REG_SZ):
-  - `PauseFeatureUpdatesStartTime` / `EndTime`
-  - `PauseQualityUpdatesStartTime` / `EndTime`
-  - `PauseUpdatesStartTime` / `PauseUpdatesExpiryTime`
+- `PauseFeatureUpdatesStartTime`
+- `PauseFeatureUpdatesEndTime`
+- `PauseQualityUpdatesStartTime`
+- `PauseQualityUpdatesEndTime`
+- `PauseUpdatesStartTime`
+- `PauseUpdatesExpiryTime`
 
-> ✅ All timestamps computed in **UTC** to avoid timezone ambiguity.
+These keys are the same values used internally by the Windows Update user interface.
 
----
+## Installation and Usage
 
-## 🚀 Quick Start
+### Manual Execution (Recommended)
+1. Download the `PauseWindowsUpdate10YearWithoutDisableIt.ps1` script from this repository.
+2. Right-click the file and select **Run with PowerShell**.
+3. Confirm the UAC prompt to allow administrative changes.
 
-### 🔧 Prerequisites
-- Windows 10 or 11 (x64 recommended)
-- **Run PowerShell as Administrator**
+## Disclaimer
 
-## ⚠️ Disclaimer
+Use this tool at your own risk. Disabling Windows security updates for extended periods can expose systems to known vulnerabilities. This utility is intended for advanced users operating in controlled environments.
 
-> 🔥 **Security Risk**: Extending update pause for years *intentionally delays critical security patches*. Systems become vulnerable to known exploits — **especially dangerous on internet-connected or untrusted networks**.
-
-> 🛡️ **Only use in isolated, air-gapped, or tightly controlled environments** (e.g., labs, kiosks, offline dev machines). Never use on domain-joined production endpoints without compensating controls (e.g., network segmentation, EDR, strict firewall rules).
-
-> 🔄 **Resuming updates**:  
-> Go to `Settings > Windows Update > Pause updates` and click **"Resume updates"** — this immediately clears the registry pause values.
-
-> 📜 **No warranty**: This tool is provided *"as-is"*. You assume full responsibility for system stability and compliance (e.g., ISO 27001, NIST, internal policy).
-
-
+## To restore normal update behavior at any time, open **Settings → Windows Update** and select **Resume updates**.
